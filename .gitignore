@@ -1,0 +1,52 @@
+# macOS
+.DS_Store
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Node / Expo
+node_modules/
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.expo/
+dist/
+web-build/
+.metro-health-check*
+*.tsbuildinfo
+
+# Expo native credentials/artifacts
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+htmlcov/
+.coverage
+coverage.xml
+build/
+*.egg-info/
+
+# Local databases
+*.sqlite
+*.sqlite3
+*.db
+
+# IDE
+.idea/
+.vscode/
