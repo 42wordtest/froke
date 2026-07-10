@@ -1,70 +1,94 @@
-import { StyleSheet, Text, TouchableOpacity, View, Image, Linking} from 'react-native';
-import SingleLocation from './SingleLocation';
-import Icon from 'react-native-ico-material-design'
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { colors, radius, shadows, spacing, typography } from '../../design/theme';
 
-export default function SavedLocationCard({navigation, location}) {
-  
+export default function SavedLocationCard({ navigation, location, onRemove }) {
   const handlePress = () => {
-    navigation.navigate('Single Location', location.location_id);}
-  const handleDirections = () => {
-      const directionsLink = `https://www.google.com/maps/dir/?api=1&destination=${location.longitude},${location.latitude}`;
-      Linking.openURL(directionsLink)
-        .catch((error) => {
-          console.error(`Error opening directions link: ${error}`);
-        });
-    };
-    return (
-      
-        <TouchableOpacity onPress={handlePress}> 
-        <View style={styles.savedBox}>
-          <Image style={styles.smallPic} source={{uri:location.imgURL}}></Image>
-            <View style={styles.textContainer}>
-              <Text style={styles.textMain}>{location.location_name}</Text>
-              <Text style={styles.textSub}>{location.location_area}</Text>
-            </View>
-          <TouchableOpacity style={styles.navigationButton} onPress={handleDirections}>
-            <Icon name='compass-with-white-needles' color='#4578DE' height="30" width="30"/>
-          </TouchableOpacity>
-        </View>
-        </TouchableOpacity>
-      
-    );
-  }
+    navigation.navigate('Single Location', location.location_id);
+  };
 
+  const handleDirections = () => {
+    const directionsLink = 'https://www.google.com/maps/dir/?api=1&destination=' + location.latitude + ',' + location.longitude;
+    Linking.openURL(directionsLink).catch((error) => {
+      console.error('Error opening directions link:', error);
+    });
+  };
+
+  return (
+    <Pressable
+      onPress={handlePress}
+      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      accessibilityRole="button"
+      accessibilityLabel={'Open saved location ' + location.location_name}
+    >
+      <View style={styles.iconWrap}>
+        <Ionicons name="bookmark" size={22} color={colors.blue} />
+      </View>
+      <View style={styles.content}>
+        <Text style={styles.title} numberOfLines={2}>{location.location_name}</Text>
+        <Text style={styles.subtitle} numberOfLines={2}>{location.location_area}</Text>
+      </View>
+      <View style={styles.actions}>
+        <Pressable style={styles.iconButton} onPress={handleDirections} accessibilityRole="button" accessibilityLabel="Get directions">
+          <Ionicons name="navigate-outline" size={21} color={colors.blue} />
+        </Pressable>
+        {onRemove ? (
+          <Pressable style={styles.iconButton} onPress={() => onRemove(location.location_id)} accessibilityRole="button" accessibilityLabel="Remove saved location">
+            <Ionicons name="trash-outline" size={21} color={colors.danger} />
+          </Pressable>
+        ) : null}
+      </View>
+    </Pressable>
+  );
+}
 
 const styles = StyleSheet.create({
-    savedBox:{ 
-      backgroundColor: "#7393B3",
-      borderWidth: 1,
-      borderColor: 'white',
-      margin:10,
-      alignItems: 'flex-start',
-      flexDirection: 'row',
-      flex:1,
-      borderRadius:5,
-       },
-    textMain:{
-      fontSize:20,
-      color:"white", 
-      textAlign: 'left'},
-    textContainer:{flex:1},  
-    textSub:{
-      fontStyle:'italic',
-      color:"white", 
-      textAlign: 'left'},
-    smallPic:{
-      alignSelf:'flex-start',
-      height:100,
-      width:100,
-      marginRight:10,
-      borderTopLeftRadius:5,
-      borderBottomLeftRadius:5
-    },
-    navigationButton: {
-      backgroundColor: 'white',
-      padding: 5,
-      borderTopRightRadius: 5,
-      borderBottomLeftRadius: 5,
-    },
-  });
-  
+  card: {
+    minHeight: 112,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.lg,
+    flexDirection: 'row',
+    gap: spacing.md,
+    ...shadows.card,
+  },
+  pressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.99 }],
+  },
+  iconWrap: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: colors.blueSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  content: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  title: {
+    color: colors.text,
+    fontSize: typography.h2,
+    fontWeight: '800',
+  },
+  subtitle: {
+    color: colors.muted,
+    fontSize: typography.body,
+    lineHeight: 22,
+  },
+  actions: {
+    gap: spacing.sm,
+  },
+  iconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.surfaceMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

@@ -1,89 +1,120 @@
-import { StyleSheet, Text, TouchableOpacity, Image, View } from 'react-native';
-import { Rating } from '@kolking/react-native-rating';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { colors, radius, shadows, spacing, typography } from '../../design/theme';
 
- 
-export default function LocationCard({navigation, location_id, distance, location_img_url, location_name, avg_rating, location_area}) {
-  
+function formatDistance(distance) {
+  if (typeof distance !== 'number') return 'Distance unavailable';
+  if (distance < 1000) return Math.round(distance) + ' m away';
+  return (distance / 1000).toFixed(1) + ' km away';
+}
 
+export default function LocationCard({ navigation, location, onOpenMap }) {
   const handlePress = () => {
-    navigation.navigate('Single Location', location_id);
+    navigation.navigate('Single Location', location.location_id);
   };
-  
-    return (
-      <TouchableOpacity
-       style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
-       onPress={handlePress}
-       >
 
-      <View style={styles.container}>
-     
-        <Image 
-        style={styles.image}
-        source={{uri: `${location_img_url}` }}
-        />
-  
-      <View style={styles.textAndReviewContainer} >
-      <View style={styles.textContainer}> 
-
-     
-        <Text style={styles.textName}>{location_name}</Text>
-        <Text style={styles.textArea}>{location_area}</Text>    
-        <Text style={styles.textDistance}>{(distance/1000).toFixed(2)}  km</Text>
-        
-       
-       </View>
-
-        <View style={styles.starContainer}>
-        <Rating size={17} rating={avg_rating} fillColor='#4578DE' disabled={true}/>
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel={'Open ' + location.bathingWaterName}
+    >
+      <View style={styles.iconWrap}>
+        <Ionicons name="water" size={24} color={colors.blue} />
+      </View>
+      <View style={styles.content}>
+        <Text style={styles.name} numberOfLines={2} maxFontSizeMultiplier={1.2}>{location.bathingWaterName}</Text>
+        <Text style={styles.point} numberOfLines={2} maxFontSizeMultiplier={1.2}>{location.name}</Text>
+        <View style={styles.metaRow}>
+          <Ionicons name="navigate-outline" size={15} color={colors.muted} />
+          <Text style={styles.meta}>{formatDistance(location.distance)}</Text>
         </View>
-        </View>
-        </View>
-      </TouchableOpacity>
-    );
-  }
+      </View>
+      <View style={styles.actions}>
+        <Pressable
+          onPress={handlePress}
+          style={styles.iconButton}
+          accessibilityRole="button"
+          accessibilityLabel="View details"
+        >
+          <Ionicons name="chevron-forward" size={20} color={colors.blue} />
+        </Pressable>
+        {onOpenMap ? (
+          <Pressable
+            onPress={() => onOpenMap(location)}
+            style={styles.iconButton}
+            accessibilityRole="button"
+            accessibilityLabel="Open on map"
+          >
+            <Ionicons name="map-outline" size={20} color={colors.blue} />
+          </Pressable>
+        ) : null}
+      </View>
+    </Pressable>
+  );
+}
 
- const styles = StyleSheet.create({
-    image: {
-      borderRadius: 20,
-      margin: 10,
-      width:280,
-      height:280,
-      zIndex: 0
-    }, 
-    container: {
-      backgroundColor: '#f0f0f0',
-      position: 'relative'
-    },
-    textContainer: {
-      position: 'absolute',
-      bottom: 18,
-      left: 18,
-      paddingRight:50,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-       borderRadius: 10,
-      width: "88%"
-   
-    },
-    textName: {
-      color: 'white',
-      fontSize: 18,
-      fontWeight: 'bold',
-      paddingLeft: 12,
-      paddingTop: 5,
-    },
-    textArea: {
-      color: 'white',
-     paddingLeft: 12,
-    },
-    textDistance: {
-      color: 'white',
-      paddingLeft: 12,
-      paddingBottom: 5,
-    },
-    starContainer: {
-      position: 'absolute',
-      bottom: 260,
-      right: 30,
-    }, 
-   
- })
+const styles = StyleSheet.create({
+  card: {
+    minHeight: 132,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.lg,
+    flexDirection: 'row',
+    gap: spacing.md,
+    ...shadows.card,
+    marginHorizontal: spacing.xl,
+  },
+  pressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.99 }],
+  },
+  iconWrap: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: colors.blueSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  content: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  name: {
+    color: colors.text,
+    fontSize: typography.h2,
+    fontWeight: '800',
+  },
+  point: {
+    color: colors.muted,
+    fontSize: typography.body,
+    lineHeight: 21,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  meta: {
+    color: colors.muted,
+    fontSize: typography.small,
+    fontWeight: '600',
+  },
+  actions: {
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  iconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.surfaceMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

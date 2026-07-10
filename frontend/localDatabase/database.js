@@ -27,8 +27,8 @@ async function saveLocation(location, database="savedLocations"){
                                     location.location_area,
                                     location.body,
                                     location.location_id,
-                                    location.coordinates[0],
                                     location.coordinates[1],
+                                    location.coordinates[0],
                                     location.avg_rating,
                                     location.water_classification,
                                     location.location_img_url

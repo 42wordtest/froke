@@ -1,5 +1,7 @@
 from contextlib import asynccontextmanager
 
+import httpx
+
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
@@ -26,8 +28,11 @@ from .schemas import (
     VotePatch,
 )
 
+GOVERNMENT_SAMPLING_POINTS_URL = "https://location.data.gov.uk/doc/ef/SamplingPoint/bwsp.eaew.json?_view=sampling-point&_pageSize=500"
+
 ENDPOINTS = {
     "GET /api": {"description": "serves up a json representation of all the available endpoints"},
+    "GET /api/government/sampling-points": {"description": "proxies the official UK Government bathing water sampling point feed"},
     "GET /api/locations": {
         "description": "serves all safe swimming spots",
         "queries": ["sort_by", "distance", "order", "limit", "p"],
@@ -87,6 +92,24 @@ async def request_validation_exception_handler(request: Request, exc: RequestVal
 @app.get("/api")
 async def get_endpoints():
     return ENDPOINTS
+
+
+@app.get("/api/government/sampling-points")
+async def get_government_sampling_points():
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "Froke/1.0 (+https://expo.dev; mobile-app)",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=20.0, follow_redirects=True, headers=headers) as client:
+            response = await client.get(GOVERNMENT_SAMPLING_POINTS_URL)
+            response.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=exc.response.status_code, detail="Government API unavailable") from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=502, detail="Government API unavailable") from exc
+
+    return JSONResponse(content=response.json())
 
 
 @app.get("/api/locations", response_model=LocationsResponse)

@@ -1,165 +1,170 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, Image, View, TouchableOpacity, Linking } from 'react-native';
-import { StarRating } from './StarRating';
-import Icon from 'react-native-ico-material-design';
-import {saveLocation, unsaveLocation, findID} from '../../localDatabase/database.js'
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { saveLocation, unsaveLocation } from '../../localDatabase/database.js';
+import { colors, radius, shadows, spacing, typography } from '../../design/theme';
 
-export default function SingleLocationContainer({ location, reviewCount, averageRating, saved }) {
-  const [savedClicked, setSavedClicked] = useState((saved ? true : false))
-  const [visitedClicked, setVisitedClicked] = useState(false)
-  const [saving, setSaving] = useState(false)
+export default function SingleLocationContainer({ location, averageRating, saved }) {
+  const [savedClicked, setSavedClicked] = useState((saved ? true : false));
+  const [saving, setSaving] = useState(false);
 
-  const waterDate = new Date(location.water_classification_date);
-
-  const formattedWaterDate = waterDate.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
   const handleSave = () => {
-    if(saving === false){
-      setSaving(true)
-      if(savedClicked === false){
-        saveLocation(location).then(()=>{
-          setSavedClicked(true)
-          setSaving(false)
-        }).catch((err)=>console.log(err))
-      }
-      else {
-        unsaveLocation(location.location_id).then(()=>{
-          setSavedClicked(false)
-          setSaving(false)
-        })
-      }
+    if (saving) return;
+    setSaving(true);
+    if (!savedClicked) {
+      saveLocation(location)
+        .then(() => setSavedClicked(true))
+        .catch((err) => console.log(err))
+        .finally(() => setSaving(false));
+    } else {
+      unsaveLocation(location.location_id)
+        .then(() => setSavedClicked(false))
+        .finally(() => setSaving(false));
     }
-  }
+  };
 
   const handleDirections = () => {
-    const directionsLink = `https://www.google.com/maps/dir/?api=1&destination=${location.coordinates[1]},${location.coordinates[0]}`;
-  
-    Linking.openURL(directionsLink)
-      .catch((error) => {
-        console.error(`Error opening directions link: ${error}`);
-      });
+    const directionsLink = 'https://www.google.com/maps/dir/?api=1&destination=' + location.latitude + ',' + location.longitude;
+    Linking.openURL(directionsLink).catch((error) => {
+      console.error('Error opening directions link:', error);
+    });
   };
-  
+
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>{location.location_name}</Text>
-      </View>
-      <View style={styles.ratingContainer}>
-        <View style={styles.starRating}>
-          <StarRating
-            rating={averageRating !== null ? averageRating : 0}
-          />
-          <Text style={styles.startext}>
-            {averageRating !== null ? averageRating : 'No Ratings yet'}
-          </Text>
+    <View style={styles.container}>
+      <View style={styles.hero}>
+        <View style={styles.iconWrap}>
+          <Ionicons name="water" size={34} color={colors.blue} />
         </View>
-        <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-          {savedClicked ? <Icon name='bookmark-ribbon' color='#4578DE'/> : <Icon name='bookmark-outline' color='#4578DE'/>}
-        </TouchableOpacity>
-      </View>
-
-      <Image source={{ uri: location.location_img_url }} style={{ width: 350, height: 250 }} />
-      <View style={styles.directionsShare}>
-        <TouchableOpacity style={styles.navigationButton} onPress={handleDirections}>
-          <Icon name='compass-with-white-needles' color='#4578DE' height="30" width="30"/>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.mainBody}>
-        <View style={styles.infoContainer}>
-          <Text style={styles.header2}>Swim Spot Information</Text>
-          <Text style={styles.text}>{location.body}</Text>
+        <View style={styles.heroText}>
+          <Text style={styles.eyebrow}>Bathing water</Text>
+          <Text style={styles.title}>{location.bathingWaterName || location.location_name}</Text>
+          <Text style={styles.subtitle}>{location.name || location.location_area}</Text>
         </View>
+      </View>
 
-        {location.water_classification !== null && (
-          <View style={styles.waterQualityContainer}>
-            <Text style={styles.header2}>Water Quality</Text>
-            <Text style={styles.text}>{`Water Quality Classification: ${location.water_classification}`}</Text>
-            <Text style={styles.text}>{`Date of testing: ${formattedWaterDate}`}</Text>
-          </View>
-        )}
+      <View style={styles.actions}>
+        <Pressable style={styles.actionButton} onPress={handleSave} accessibilityRole="button" accessibilityLabel="Save location">
+          <Ionicons name={savedClicked ? 'bookmark' : 'bookmark-outline'} color={colors.blue} size={22}/>
+          <Text style={styles.actionText}>{savedClicked ? 'Saved' : 'Save'}</Text>
+        </Pressable>
+        <Pressable style={styles.actionButton} onPress={handleDirections} accessibilityRole="button" accessibilityLabel="Get directions">
+          <Ionicons name="navigate-outline" color={colors.blue} size={22}/>
+          <Text style={styles.actionText}>Directions</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Sampling point details</Text>
+        <Text style={styles.body}>{location.body}</Text>
+        <View style={styles.factRow}>
+          <Text style={styles.factLabel}>Coordinates</Text>
+          <Text style={styles.factValue}>{location.latitude?.toFixed(4)}, {location.longitude?.toFixed(4)}</Text>
+        </View>
+        <View style={styles.factRow}>
+          <Text style={styles.factLabel}>Average rating</Text>
+          <Text style={styles.factValue}>{averageRating ? averageRating : 'Not rated yet'}</Text>
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    position: 'absolute',
-    top: 25,
-    left: -32,
-    fontWeight: 'bold',
-    fontSize: 20,
-    backgroundColor: '#D6DBFE',
+  container: {
     width: '100%',
-    padding: 10,
+    paddingHorizontal: spacing.xl,
+    paddingTop: 82,
+    gap: spacing.lg,
+  },
+  hero: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+    flexDirection: 'row',
+    gap: spacing.lg,
+    ...shadows.card,
+  },
+  iconWrap: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: colors.blueSoft,
     alignItems: 'center',
     justifyContent: 'center',
-    alignSelf: 'center',
   },
-  headerText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    letterSpacing: 2
+  heroText: {
+    flex: 1,
   },
-  header2: {
-    fontWeight: 'bold',
-    marginTop: 10,
-    color: 'black',
-    fontSize: 16
+  eyebrow: {
+    color: colors.blue,
+    fontSize: typography.small,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    marginBottom: spacing.xs,
   },
-  directionsShare: {
-    position: 'absolute',
-    top: 135,
-    left: 14
+  title: {
+    color: colors.text,
+    fontSize: typography.h1,
+    fontWeight: '800',
   },
-  navigationButton: {
-    backgroundColor: 'white',
-    padding: 7,
-    borderRadius: 8
+  subtitle: {
+    color: colors.muted,
+    fontSize: typography.body,
+    lineHeight: 22,
+    marginTop: spacing.sm,
   },
-  mainBody: {
-    backgroundColor: 'white',
-    width: 350,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#D6DBFE',
-    paddingBottom: 5,
-    marginTop: 20
-  },
-  infoContainer: {
-    alignSelf: 'flex-start',
-    marginHorizontal: 15
-  },
-  waterQualityContainer: {
-    marginTop: 10,
-    alignSelf: 'flex-start',
-    marginHorizontal: 15,
-    marginBottom: 10
-  },
-  ratingContainer: {
-    marginTop: 90,
+  actions: {
     flexDirection: 'row',
-    justifyContent: 'space-between', 
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    marginLeft: 0,
-    marginBottom: 5,
-    width: 350
+    gap: spacing.md,
   },
-  starRating: {
+  actionButton: {
+    flex: 1,
+    minHeight: 50,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
+    justifyContent: 'center',
+    gap: spacing.sm,
   },
-  startext: {
-    color: '#4578DE',
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginLeft: 4,
+  actionText: {
+    color: colors.blueDark,
+    fontWeight: '800',
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+    gap: spacing.md,
+    ...shadows.card,
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontSize: typography.h2,
+    fontWeight: '800',
+  },
+  body: {
+    color: colors.muted,
+    fontSize: typography.body,
+    lineHeight: 23,
+  },
+  factRow: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing.md,
+    gap: spacing.xs,
+  },
+  factLabel: {
+    color: colors.muted,
+    fontSize: typography.small,
+    fontWeight: '700',
+  },
+  factValue: {
+    color: colors.text,
+    fontSize: typography.body,
+    fontWeight: '700',
   },
 });

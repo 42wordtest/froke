@@ -1,74 +1,81 @@
-import { StyleSheet, Text, View, FlatList, ActivityIndicator, Image } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import SingleLocationContainer from './SingleLocationContainer';
 import ReviewContainer from '../Reviews/index';
 import React, { useEffect, useState } from 'react';
 import { getLocationByID } from '../../api';
 import Loading from '../Loading/Loading';
-import {createLocationTable, findID} from '../../localDatabase/database.js'
+import { createLocationTable, findID } from '../../localDatabase/database.js';
+import { ErrorState } from '../UI/States';
+import { colors } from '../../design/theme';
 
 export default function SingleLocation({route}) {
-    const location_id = route.params;  
-    const [location, setLocation] = useState({});
-    const [reviewCount, setReviewCount] = useState(0)
-    const [averageRating, setAverageRating] = useState(0)
-    const [singleLoading, setSingleLoading] = useState(true)
-    const [renderDelayed, setRenderDelayed] = useState(false);
-    const [saved, setSaved] = useState(false)
-    useEffect(() => {
-        if (!singleLoading) {
-            setTimeout(() => {
-                setRenderDelayed(true);
-            }, 1000);
-        }
-    }, [singleLoading]);
+  const location_id = route.params;
+  const [location, setLocation] = useState(null);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [averageRating, setAverageRating] = useState(0);
+  const [singleLoading, setSingleLoading] = useState(true);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState(null);
 
-    useEffect(() => {
-        getLocationByID(location_id).then((location) => {
-            setLocation(location);
-            setReviewCount(location.total_count)
-            setAverageRating(location.avg_rating)
-                findID(location_id)
-                    .then((res)=>{
-                    if(JSON.parse(res).length === 1){
-                        setSaved(true)
-                        setSingleLoading(false)
-                    }
-                    else{setSingleLoading(false)}
-                    })
-                    .catch(()=>{
-                    createLocationTable().then(()=>{
-                        setSingleLoading(false)
-                    })
-                })
-        }).catch((err)=>{
-            console.log(err)
-        });
-    }, [location_id]);
+  useEffect(() => {
+    setSingleLoading(true);
+    setError(null);
+    getLocationByID(location_id)
+      .then((nextLocation) => {
+        setLocation(nextLocation);
+        setReviewCount(nextLocation.total_count || 0);
+        setAverageRating(nextLocation.avg_rating || 0);
+        return findID(location_id)
+          .then((res) => {
+            if (JSON.parse(res).length === 1) setSaved(true);
+          })
+          .catch(() => createLocationTable());
+      })
+      .catch((err) => {
+        console.log(err);
+        setError('This location could not be loaded.');
+      })
+      .finally(() => setSingleLoading(false));
+  }, [location_id]);
 
+  if (singleLoading) {
     return (
-        <FlatList
-            style={{ flex: 1, marginTop: 50 }}
-            ListHeaderComponent={() => (
-                <>
-                {!renderDelayed && (
-                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F2F2F2' }}>
-                        <Loading style={{ width: 500, height: 1000 }}/>
-                    </View>
-                )}
-                {renderDelayed && (
-                    <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                    <SingleLocationContainer style={styles.single_location} location={location} reviewCount={reviewCount} averageRating={averageRating} saved={saved}/>
-                    <ReviewContainer location_id={location_id} reviewCount={reviewCount} setReviewCount={setReviewCount} averageRating={averageRating} setAverageRating={setAverageRating} />
-                    </View>
-                )}
-                </>
-            )}
-        />
+      <View style={styles.loading}>
+        <Loading style={{ width: 500, height: 1000 }}/>
+      </View>
     );
+  }
+
+  if (error || !location) return <ErrorState message={error || 'Location not found.'} />;
+
+  return (
+    <FlatList
+      style={styles.screen}
+      ListHeaderComponent={() => (
+        <View style={styles.content}>
+          <SingleLocationContainer location={location} reviewCount={reviewCount} averageRating={averageRating} saved={saved}/>
+          {location.source === 'gov-uk' ? null : (
+            <ReviewContainer location_id={location_id} reviewCount={reviewCount} setReviewCount={setReviewCount} averageRating={averageRating} setAverageRating={setAverageRating} />
+          )}
+        </View>
+      )}
+    />
+  );
 }
 
 const styles = StyleSheet.create({
-    single_location: {
-        marginBottom: 50
-    },
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+  content: {
+    alignItems: 'center',
+    paddingBottom: 90,
+  },
 });

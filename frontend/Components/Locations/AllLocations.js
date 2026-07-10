@@ -1,136 +1,90 @@
-import React from 'react';
-import { StyleSheet, Text, View, Button, Image, ScrollView,ImageBackground } from 'react-native';
-import { useEffect, useState } from 'react';
+
+import { useEffect, useMemo, useState } from 'react';
+import { FlatList, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import AppHeader from '../UI/AppHeader';
+import SearchBar from '../UI/SearchBar';
+import { EmptyState, ErrorState, LoadingSkeleton } from '../UI/States';
+import LocationCard from './LocationCard';
 import { getLocations } from '../../api';
+import { colors, spacing } from '../../design/theme';
 
 export default function AllLocations({ navigation }) {
-  const [locationData, setLocationData] = useState([]);
+  const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
+  const [error, setError] = useState(null);
+  const [query, setQuery] = useState('');
+
+  const loadLocations = () => {
+    setLoading(true);
+    setError(null);
+    getLocations()
+      .then(({ locations }) => setLocations(locations))
+      .catch(() => setError('Official bathing water locations could not be loaded.'))
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    fetchLocations();
-  }, [page]);
+    loadLocations();
+  }, []);
 
-  const fetchLocations = () => {
-    setLoading(true);
-    const itemsPerPage = 15;
-    const startIndex = (page - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-
-    getLocations(page)
-      .then(({ locations }) => {
-        const locationsForPage = locations.slice(startIndex, endIndex);
-
-        setLocationData(locationsForPage);
-        setLoading(false);
+  const filteredLocations = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    return locations
+      .filter((location) => {
+        if (!normalized) return true;
+        return location.bathingWaterName.toLowerCase().includes(normalized) || location.name.toLowerCase().includes(normalized);
       })
-      .catch((error) => {
-        console.log(error);
-        setLoading(false);
-      });
-  };
+      .sort((a, b) => a.bathingWaterName.localeCompare(b.bathingWaterName));
+  }, [locations, query]);
 
-  const handleLoadMore = () => {
-    setPage((prevPage) => prevPage + 1);
-  };
-
-  const handleLoadPrevious = () => {
-    if (page > 1) {
-      setPage((prevPage) => prevPage - 1);
-    }
-  };
+  if (loading) return <LoadingSkeleton label="Loading all bathing waters" />;
+  if (error) return <ErrorState message={error} onRetry={loadLocations} />;
 
   return (
-    <ImageBackground
-    source={{ uri: 'https://imagetolink.com/ib/oUhEves5qz.png' }}
-    style={styles.backgroundImage}
-  >
-    <View style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        {loading ? (
-          <Text>Loading...</Text>
-        ) : (
-          locationData.map((location, index) => (
-            <View key={index} style={styles.locationCard}>
-              <Text style={styles.locationName}>{location.location_name}</Text>
-              <Image
-                source={{ uri: location.location_img_url }}
-                style={styles.locationImage}
-              />
-              <Text style={styles.locationInfo}>Location Name: {location.location_name}</Text>
-              <Text style={styles.locationInfo}>Area: {location.location_area}</Text>
-              {location.water_classification && (
-                <Text style={styles.locationInfo}>{`Water Classification: ${location.water_classification}`}</Text>
-              )}
-              {location.water_classification_date && (
-                <Text style={styles.locationInfo}>{`Water Classification Date: ${location.water_classification_date}`}</Text>
-              )}
-              <Button title="More" onPress={() => navigation.navigate('Single Location', location.location_id)}
-              style={styles.moreButton} />
-            </View>
-          ))
-        )}
-        {!loading && page > 1 && (
-          <Button title="Previous Page" onPress={handleLoadPrevious} style={styles.button} />
-        )}
-        {!loading && (
-          <Button title="Next Page" onPress={handleLoadMore} style={styles.button} />
-        )}
-      </ScrollView>
-    </View>
-    </ImageBackground>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <FlatList
+      style={styles.screen}
+      contentContainerStyle={styles.list}
+      data={filteredLocations}
+      keyExtractor={(item) => item.id}
+      renderItem={({ item }) => <LocationCard navigation={navigation} location={item} />}
+      ListHeaderComponent={
+        <>
+          <AppHeader eyebrow="Directory" title="All bathing waters" subtitle="Official UK Government sampling points, sorted alphabetically." />
+          <View style={styles.searchWrap}>
+            <SearchBar value={query} onChangeText={setQuery} placeholder="Search all locations" />
+          </View>
+        </>
+      }
+      ListEmptyComponent={<EmptyState title="No locations found" message="Try changing your search term." />}
+      ItemSeparatorComponent={() => <View style={styles.separator} />}
+      initialNumToRender={14}
+      maxToRenderPerBatch={14}
+      windowSize={8}
+      removeClippedSubviews
+    />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-    paddingTop: 10
+    backgroundColor: colors.background,
   },
-  scrollView: {
-    marginBottom: 20,
-  },
-  locationCard: {
-    marginBottom: 20,
-    backgroundColor: 'rgba(0, 0, 70, 0.5)',
-    padding: 20,
-    borderRadius: 8,
-    elevation: 2, 
-    alignItems: 'center',
-  },
-  locationName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#fff'
-  },
-  locationImage: {
-    width: 300,
-    height: 200,
-    resizeMode: 'cover',
-    marginBottom: 10,
-    alignContent: 'center',
-    borderRadius: 10
-  },
-  locationInfo: {
-    marginBottom: 5,
-    fontWeight: 'bold',
-    color: '#fff'
-  },
-  button: {
-    marginVertical: 10,
-    color: '#fff',
-    backgroundColor: 'rgb(0,0,0)'
-  },
-  backgroundImage: {
+  screen: {
     flex: 1,
-    resizeMode: 'cover', 
+    backgroundColor: colors.background,
   },
-  moreButton: {
-    color: '#fff', 
+  list: {
+    paddingBottom: 100,
+  },
+  searchWrap: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.lg,
+  },
+  separator: {
+    height: spacing.md,
   },
 });

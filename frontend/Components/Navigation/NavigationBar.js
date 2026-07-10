@@ -1,101 +1,118 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { getDistance } from 'geolib';
 import { HomeScreen, MyAccount, Map, Saved, MainComponent } from './index';
-import Icon from 'react-native-ico-material-design';
 import { useUser } from '../Navigation/AccountSetup/UserContext';
-import { View } from 'react-native';
-import { useState, useEffect} from 'react'
 import { getLocations } from '../../api';
-import { getDistance } from 'geolib'
-import freeStrokeImage from '../../assets/HalfFilled.png'
-import Loading from '../Loading/Loading';
+import { LoadingSkeleton, ErrorState } from '../UI/States';
+import { colors } from '../../design/theme';
 
 const Tab = createBottomTabNavigator();
 
+function tabIcon(routeName, focused) {
+  const iconMap = {
+    Home: focused ? 'home' : 'home-outline',
+    Map: focused ? 'map' : 'map-outline',
+    Saved: focused ? 'bookmark' : 'bookmark-outline',
+    Account: focused ? 'person-circle' : 'person-circle-outline',
+  };
+  return iconMap[routeName] || 'ellipse-outline';
+}
+
 export default function NavigationBar({route}) {
   const user = useUser();
-  const {userLocation} = route.params
-  const [closestLocations, setClosestLocations] = useState([])
-  const [loadingNearbyLocations, setLoadingNearbyLocations] = useState(true);
-  const [topRatedLocations, setTopRatedLocations] = useState([])
-  const [loadingTopRatedLocations, setLoadingTopRatedLocations] = useState(true)
-  const userLatitude = userLocation.coords.latitude
-  const userLongitude = userLocation.coords.longitude
+  const {userLocation} = route.params;
+  const [locations, setLocations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(()=>{
-    getLocations()
-    .then(({locations})=>{
-      const allLocationsDistance = locations.map((location)=>{
-        const locationCopy = {...location}
-        const stringLocation = JSON.stringify(locationCopy)
-        const parsedLocation = JSON.parse(stringLocation)
-        locationCopy.distance = getDistance({latitude: userLatitude, longitude : userLongitude},{latitude: parsedLocation.coordinates[1], longitude : parsedLocation.coordinates[0]})
-        return locationCopy
+  const userCoords = useMemo(() => {
+    if (!userLocation?.coords) return null;
+    return {
+      latitude: userLocation.coords.latitude,
+      longitude: userLocation.coords.longitude,
+    };
+  }, [userLocation]);
+
+  const loadLocations = useCallback((forceRefresh = false) => {
+    setLoading(true);
+    setError(null);
+    getLocations({ forceRefresh })
+      .then(({locations: apiLocations}) => {
+        const withDistance = apiLocations.map((location) => {
+          if (!userCoords) return location;
+          return {
+            ...location,
+            distance: getDistance(userCoords, {
+              latitude: location.latitude,
+              longitude: location.longitude,
+            }),
+          };
+        });
+        setLocations(withDistance);
       })
-      const sortedLocations = allLocationsDistance.sort((a,b)=>a.distance-b.distance)
-      const sortedTopLocations = allLocationsDistance.sort((a,b)=>a.avg_rating - b.avg_rating)
-      setTopRatedLocations(sortedTopLocations.slice(-20).reverse())
-      setClosestLocations(sortedLocations.slice(0,20))
-      setTimeout(() => {
-        setLoadingTopRatedLocations(false)
-        setLoadingNearbyLocations(false);
-    }, 1000);
-    })
-    .catch((err) => {
-      console.log('error here <<<<', err);
-    })
-  },[])
-  
+      .catch((err) => {
+        console.log('Government location fetch failed', err);
+        setError('We could not load official bathing water locations. Check your connection and try again.');
+      })
+      .finally(() => setLoading(false));
+  }, [userCoords]);
+
+  useEffect(() => {
+    loadLocations(false);
+  }, [loadLocations]);
+
+  const closestLocations = useMemo(() => {
+    return [...locations]
+      .sort((a, b) => (a.distance ?? Number.MAX_SAFE_INTEGER) - (b.distance ?? Number.MAX_SAFE_INTEGER))
+      .slice(0, 30);
+  }, [locations]);
+
+  const featuredLocations = useMemo(() => {
+    return [...locations]
+      .sort((a, b) => a.bathingWaterName.localeCompare(b.bathingWaterName))
+      .slice(0, 30);
+  }, [locations]);
+
+  if (loading) return <LoadingSkeleton label="Loading official bathing waters" />;
+  if (error) return <ErrorState message={error} onRetry={() => loadLocations(true)} />;
 
   return (
-    <>
-      {loadingNearbyLocations && loadingTopRatedLocations ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F2F2F2' }}>
-          <Loading style={{ width: 500, height: 1000 }} />
-        </View>
-      ) : (
-        <Tab.Navigator initialRouteName='Home' screenOptions={{
-          tabBarActiveTintColor: '#0F98E1',
-        }}>
-          <Tab.Screen
-            name="Home"
-            component={HomeScreen}
-            options={{
-              tabBarLabel: () => null,
-              tabBarIcon: () => (
-                <Icon name="home-button" color='#489FE1' />
-              ),
-            }}
-            initialParams={{topRatedLocations, closestLocations }}
-          />
-          <Tab.Screen name="Map" component={Map} options={{
-            tabBarLabel: () => null,
-            tabBarIcon: () => (
-              <Icon name="compass-with-white-needles" color='#489FE1' />
-            ),
-          }} />
-          <Tab.Screen name="Saved" component={Saved} options={{
-            tabBarLabel: () => null,
-            tabBarIcon: () => (
-              <Icon name="bookmark-ribbon" color='#489FE1' />
-            ),
-          }} />
-          {user ? (
-            <Tab.Screen name="My Account" component={MyAccount} options={{
-              tabBarLabel: () => null,
-              tabBarIcon: () => (
-                <Icon name="user-shape" color='#489FE1' />
-              ),
-            }} />
-          ) : (
-            <Tab.Screen name="Log in" component={MainComponent} options={{
-              tabBarLabel: () => null,
-              tabBarIcon: () => (
-                <Icon name="user-outline" color='#489FE1' />
-              ),
-            }} />
-          )}
-        </Tab.Navigator>
-      )}
-    </>
+    <Tab.Navigator
+      initialRouteName="Home"
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarActiveTintColor: colors.blue,
+        tabBarInactiveTintColor: colors.muted,
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '700',
+          paddingBottom: 4,
+        },
+        tabBarStyle: {
+          minHeight: 72,
+          paddingTop: 8,
+          paddingBottom: 10,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+        },
+        tabBarIcon: ({ focused, color }) => (
+          <Ionicons name={tabIcon(route.name, focused)} color={color} size={24} />
+        ),
+      })}
+    >
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        initialParams={{ locations, closestLocations, featuredLocations, reloadLocations: loadLocations, userCoords }}
+      />
+      <Tab.Screen name="Map" component={Map} initialParams={{ locations, userCoords }} />
+      <Tab.Screen name="Saved" component={Saved} />
+      <Tab.Screen
+        name="Account"
+        component={user ? MyAccount : MainComponent}
+      />
+    </Tab.Navigator>
   );
 }
