@@ -16,6 +16,9 @@ export default ({ config }) => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.froke.app",
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+    },
   },
   android: {
     package: "com.froke.app",
@@ -39,7 +42,7 @@ export default ({ config }) => ({
   extra: {
     apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL,
     eas: {
-      projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
+      projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID || "7acd1f0e-e70b-43cc-9a4e-f1df0529349f",
     },
   },
 });
