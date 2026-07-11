@@ -136,6 +136,9 @@ async def list_reviews_for_location(
 
 async def create_review(db, *, location_id: str, payload: dict[str, Any]) -> dict[str, Any]:
     numeric_location_id = _parse_numeric_id(location_id)
+    if not await db.locations.find_one({"location_id": numeric_location_id}):
+        raise HTTPException(status_code=404, detail="Location Does Not Exist!")
+
     max_review = await db.reviews.find_one(
         {},
         sort=[("review_id", DESCENDING)],
