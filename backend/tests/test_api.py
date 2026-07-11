@@ -223,6 +223,55 @@ async def test_reviews_can_be_created_voted_and_deleted(client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {
+            "username": "newuser",
+            "uid": "uid-3",
+            "body": "   ",
+            "rating_for_location": 5,
+        },
+        {
+            "username": "newuser",
+            "uid": "uid-3",
+            "body": "Loved it.",
+            "rating_for_location": 0,
+        },
+        {
+            "username": "newuser",
+            "uid": "uid-3",
+            "body": "Loved it.",
+            "rating_for_location": 6,
+        },
+        {
+            "username": "newuser",
+            "uid": "uid-3",
+            "body": "Loved it.",
+            "rating_for_location": True,
+        },
+        {
+            "username": "newuser",
+            "uid": "uid-3",
+            "body": "Loved it.",
+            "rating_for_location": "excellent",
+        },
+        {
+            "username": "",
+            "uid": "uid-3",
+            "body": "Loved it.",
+            "rating_for_location": 5,
+        },
+    ],
+)
+async def test_post_review_rejects_invalid_payloads(client, payload):
+    response = await client.post("/api/locations/1/reviews", json=payload)
+
+    assert response.status_code == 400
+    assert response.json() == {"message": "Bad Request"}
+
+
+@pytest.mark.asyncio
 async def test_post_review_for_missing_location_returns_404():
     fake_db = FakeDb()
     starting_review_count = await fake_db.reviews.count_documents({})
