@@ -61,12 +61,14 @@ type CachePayload = {
 
 type FetchStatusError = Error & { status?: number };
 
-const ENDPOINT = 'https://location.data.gov.uk/doc/ef/SamplingPoint/bwsp.eaew.json?_view=sampling-point&_pageSize=500';
+const ENDPOINT =
+  'https://location.data.gov.uk/doc/ef/SamplingPoint/bwsp.eaew.json?_view=sampling-point&_pageSize=500';
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:9090/api';
 const PROXY_ENDPOINT = API_BASE_URL.replace(/\/$/, '') + '/government/sampling-points';
 const CACHE_KEY = 'froke.govUkSamplingPoints.v1';
 const CACHE_TTL_MS = 1000 * 60 * 60 * 24;
-const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80';
+const DEFAULT_IMAGE =
+  'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -75,7 +77,11 @@ function firstLabel(labels?: GovernmentLabel[], fallback = 'Unnamed sampling poi
   return english?._value || labels?.find((label) => label?._value)?._value || fallback;
 }
 
-function labelValue(name?: GovernmentName, labels?: GovernmentLabel[], fallback = 'Unnamed sampling point') {
+function labelValue(
+  name?: GovernmentName,
+  labels?: GovernmentLabel[],
+  fallback = 'Unnamed sampling point'
+) {
   return name?._value || firstLabel(labels, fallback);
 }
 
@@ -103,7 +109,8 @@ function locationIdFromAbout(about: string) {
 function getItems(payload: unknown): GovernmentSamplingPoint[] {
   if (!payload || typeof payload !== 'object') return [];
   const candidate = payload as { result?: { items?: unknown }; items?: unknown };
-  if (Array.isArray(candidate.result?.items)) return candidate.result.items as GovernmentSamplingPoint[];
+  if (Array.isArray(candidate.result?.items))
+    return candidate.result.items as GovernmentSamplingPoint[];
   if (Array.isArray(candidate.items)) return candidate.items as GovernmentSamplingPoint[];
   return [];
 }
@@ -199,7 +206,9 @@ function getBundledLocations(): LegacyLocation[] {
   return transformPayload(bundledSamplingPoints);
 }
 
-export async function fetchGovernmentLocations(options: { forceRefresh?: boolean } = {}): Promise<LegacyLocation[]> {
+export async function fetchGovernmentLocations(
+  options: { forceRefresh?: boolean } = {}
+): Promise<LegacyLocation[]> {
   const bundledLocations = getBundledLocations();
   if (bundledLocations.length) {
     await cacheLocations(bundledLocations);
@@ -224,10 +233,14 @@ export async function fetchGovernmentLocations(options: { forceRefresh?: boolean
   }
 }
 
-export async function getGovernmentLocationById(locationId: string | number): Promise<LegacyLocation> {
+export async function getGovernmentLocationById(
+  locationId: string | number
+): Promise<LegacyLocation> {
   const locations = await fetchGovernmentLocations();
   const normalized = String(locationId);
-  const location = locations.find((item) => String(item.location_id) === normalized || item.id === normalized);
+  const location = locations.find(
+    (item) => String(item.location_id) === normalized || item.id === normalized
+  );
   if (!location) throw new Error('Location not found');
   return location;
 }

@@ -1,3 +1,3 @@
-import SwimmingAdvice from "./SwimmingAdvice"
+import SwimmingAdvice from './SwimmingAdvice';
 
-export default SwimmingAdvice
+export default SwimmingAdvice;

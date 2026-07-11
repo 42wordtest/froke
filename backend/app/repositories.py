@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import HTTPException
@@ -87,7 +87,7 @@ async def create_location(db, payload: dict[str, Any]) -> dict[str, Any]:
     document = {
         "location_id": next_id,
         "coordinates": [lon, lat],
-        "created_at": datetime.now(timezone.utc),
+        "created_at": datetime.now(UTC),
         "distance_from_user_km": payload.get("distance_from_user_km"),
         "location_name": payload["location_name"],
         "location_area": payload["location_area"],
@@ -123,12 +123,7 @@ async def list_reviews_for_location(
         raise HTTPException(status_code=404, detail="Location Does Not Exist!")
 
     query = {"location_id": numeric_location_id}
-    cursor = (
-        db.reviews.find(query)
-        .sort("created_at", DESCENDING)
-        .skip(offset)
-        .limit(page_size)
-    )
+    cursor = db.reviews.find(query).sort("created_at", DESCENDING).skip(offset).limit(page_size)
     reviews = [serialize_document(review) async for review in cursor]
     total_count = await db.reviews.count_documents(query)
     return {"reviews": reviews, "total_count": total_count}
@@ -152,7 +147,7 @@ async def create_review(db, *, location_id: str, payload: dict[str, Any]) -> dic
         "body": payload["body"],
         "rating_for_location": payload["rating_for_location"],
         "votes_for_review": 0,
-        "created_at": datetime.now(timezone.utc),
+        "created_at": datetime.now(UTC),
         "location_id": numeric_location_id,
     }
 
@@ -189,9 +184,6 @@ async def _attach_average_ratings(db, locations: list[dict[str, Any]]) -> None:
         {"$match": {"location_id": {"$in": location_ids}}},
         {"$group": {"_id": "$location_id", "avg_rating": {"$avg": "$rating_for_location"}}},
     ]
-    ratings = {
-        row["_id"]: row["avg_rating"]
-        async for row in db.reviews.aggregate(pipeline)
-    }
+    ratings = {row["_id"]: row["avg_rating"] async for row in db.reviews.aggregate(pipeline)}
     for location in locations:
         location["avg_rating"] = ratings.get(location["location_id"])

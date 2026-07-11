@@ -8,7 +8,11 @@ export function PrimaryButton({ label, onPress, accessibilityLabel, disabled }) 
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel || label}
-      style={({ pressed }) => [styles.primary, pressed && styles.pressed, disabled && styles.disabled]}
+      style={({ pressed }) => [
+        styles.primary,
+        pressed && styles.pressed,
+        disabled && styles.disabled,
+      ]}
     >
       <Text style={styles.primaryText}>{label}</Text>
     </Pressable>
@@ -22,7 +26,11 @@ export function SecondaryButton({ label, onPress, accessibilityLabel, disabled }
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel || label}
-      style={({ pressed }) => [styles.secondary, pressed && styles.pressed, disabled && styles.disabled]}
+      style={({ pressed }) => [
+        styles.secondary,
+        pressed && styles.pressed,
+        disabled && styles.disabled,
+      ]}
     >
       <Text style={styles.secondaryText}>{label}</Text>
     </Pressable>

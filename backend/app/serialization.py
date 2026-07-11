@@ -10,7 +10,7 @@ def serialize_document(document: dict[str, Any]) -> dict[str, Any]:
         output["_id"] = str(output["_id"])
 
     for key, value in list(output.items()):
-        if isinstance(value, (datetime, date)):
+        if isinstance(value, datetime | date):
             output[key] = value.isoformat()
 
     return output

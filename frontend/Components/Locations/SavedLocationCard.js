@@ -8,7 +8,11 @@ export default function SavedLocationCard({ navigation, location, onRemove }) {
   };
 
   const handleDirections = () => {
-    const directionsLink = 'https://www.google.com/maps/dir/?api=1&destination=' + location.latitude + ',' + location.longitude;
+    const directionsLink =
+      'https://www.google.com/maps/dir/?api=1&destination=' +
+      location.latitude +
+      ',' +
+      location.longitude;
     Linking.openURL(directionsLink).catch((error) => {
       console.error('Error opening directions link:', error);
     });
@@ -25,15 +29,29 @@ export default function SavedLocationCard({ navigation, location, onRemove }) {
         <Ionicons name="bookmark" size={22} color={colors.blue} />
       </View>
       <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={2}>{location.location_name}</Text>
-        <Text style={styles.subtitle} numberOfLines={2}>{location.location_area}</Text>
+        <Text style={styles.title} numberOfLines={2}>
+          {location.location_name}
+        </Text>
+        <Text style={styles.subtitle} numberOfLines={2}>
+          {location.location_area}
+        </Text>
       </View>
       <View style={styles.actions}>
-        <Pressable style={styles.iconButton} onPress={handleDirections} accessibilityRole="button" accessibilityLabel="Get directions">
+        <Pressable
+          style={styles.iconButton}
+          onPress={handleDirections}
+          accessibilityRole="button"
+          accessibilityLabel="Get directions"
+        >
           <Ionicons name="navigate-outline" size={21} color={colors.blue} />
         </Pressable>
         {onRemove ? (
-          <Pressable style={styles.iconButton} onPress={() => onRemove(location.location_id)} accessibilityRole="button" accessibilityLabel="Remove saved location">
+          <Pressable
+            style={styles.iconButton}
+            onPress={() => onRemove(location.location_id)}
+            accessibilityRole="button"
+            accessibilityLabel="Remove saved location"
+          >
             <Ionicons name="trash-outline" size={21} color={colors.danger} />
           </Pressable>
         ) : null}

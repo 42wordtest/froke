@@ -5,7 +5,7 @@ import { saveLocation, unsaveLocation } from '../../localDatabase/database.js';
 import { colors, radius, shadows, spacing, typography } from '../../design/theme';
 
 export default function SingleLocationContainer({ location, averageRating, saved }) {
-  const [savedClicked, setSavedClicked] = useState((saved ? true : false));
+  const [savedClicked, setSavedClicked] = useState(saved ? true : false);
   const [saving, setSaving] = useState(false);
 
   const handleSave = () => {
@@ -24,7 +24,11 @@ export default function SingleLocationContainer({ location, averageRating, saved
   };
 
   const handleDirections = () => {
-    const directionsLink = 'https://www.google.com/maps/dir/?api=1&destination=' + location.latitude + ',' + location.longitude;
+    const directionsLink =
+      'https://www.google.com/maps/dir/?api=1&destination=' +
+      location.latitude +
+      ',' +
+      location.longitude;
     Linking.openURL(directionsLink).catch((error) => {
       console.error('Error opening directions link:', error);
     });
@@ -44,12 +48,26 @@ export default function SingleLocationContainer({ location, averageRating, saved
       </View>
 
       <View style={styles.actions}>
-        <Pressable style={styles.actionButton} onPress={handleSave} accessibilityRole="button" accessibilityLabel="Save location">
-          <Ionicons name={savedClicked ? 'bookmark' : 'bookmark-outline'} color={colors.blue} size={22}/>
+        <Pressable
+          style={styles.actionButton}
+          onPress={handleSave}
+          accessibilityRole="button"
+          accessibilityLabel="Save location"
+        >
+          <Ionicons
+            name={savedClicked ? 'bookmark' : 'bookmark-outline'}
+            color={colors.blue}
+            size={22}
+          />
           <Text style={styles.actionText}>{savedClicked ? 'Saved' : 'Save'}</Text>
         </Pressable>
-        <Pressable style={styles.actionButton} onPress={handleDirections} accessibilityRole="button" accessibilityLabel="Get directions">
-          <Ionicons name="navigate-outline" color={colors.blue} size={22}/>
+        <Pressable
+          style={styles.actionButton}
+          onPress={handleDirections}
+          accessibilityRole="button"
+          accessibilityLabel="Get directions"
+        >
+          <Ionicons name="navigate-outline" color={colors.blue} size={22} />
           <Text style={styles.actionText}>Directions</Text>
         </Pressable>
       </View>
@@ -59,7 +77,9 @@ export default function SingleLocationContainer({ location, averageRating, saved
         <Text style={styles.body}>{location.body}</Text>
         <View style={styles.factRow}>
           <Text style={styles.factLabel}>Coordinates</Text>
-          <Text style={styles.factValue}>{location.latitude?.toFixed(4)}, {location.longitude?.toFixed(4)}</Text>
+          <Text style={styles.factValue}>
+            {location.latitude?.toFixed(4)}, {location.longitude?.toFixed(4)}
+          </Text>
         </View>
         <View style={styles.factRow}>
           <Text style={styles.factLabel}>Average rating</Text>

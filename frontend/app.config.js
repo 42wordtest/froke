@@ -1,48 +1,48 @@
 export default ({ config }) => ({
   ...config,
-  name: "froke",
-  slug: "froke",
-  version: "1.0.0",
-  orientation: "portrait",
-  icon: "./assets/icon.png",
-  userInterfaceStyle: "light",
-  scheme: "froke",
+  name: 'froke',
+  slug: 'froke',
+  version: '1.0.0',
+  orientation: 'portrait',
+  icon: './assets/icon.png',
+  userInterfaceStyle: 'light',
+  scheme: 'froke',
   splash: {
-    image: "./assets/splash.png",
-    resizeMode: "contain",
-    backgroundColor: "#ffffff",
+    image: './assets/splash.png',
+    resizeMode: 'contain',
+    backgroundColor: '#ffffff',
   },
-  assetBundlePatterns: ["**/*"],
+  assetBundlePatterns: ['**/*'],
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.froke.app",
+    bundleIdentifier: 'com.froke.app',
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
     },
   },
   android: {
-    package: "com.froke.app",
+    package: 'com.froke.app',
     adaptiveIcon: {
-      foregroundImage: "./assets/adaptive-icon.png",
-      backgroundColor: "#ffffff",
+      foregroundImage: './assets/adaptive-icon.png',
+      backgroundColor: '#ffffff',
     },
   },
   plugins: [
-    "expo-dev-client",
+    'expo-dev-client',
     [
-      "expo-location",
+      'expo-location',
       {
         isAndroidBackgroundLocationEnabled: false,
       },
     ],
   ],
   web: {
-    favicon: "./assets/favicon.png",
+    favicon: './assets/favicon.png',
   },
   extra: {
     apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL,
     eas: {
-      projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID || "7acd1f0e-e70b-43cc-9a4e-f1df0529349f",
+      projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID || '7acd1f0e-e70b-43cc-9a4e-f1df0529349f',
     },
   },
 });

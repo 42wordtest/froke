@@ -16,7 +16,6 @@ const DEFAULT_REGION = {
   longitudeDelta: 7.4,
 };
 
-
 function MapPinIcon() {
   return (
     <Svg width={24} height={44} viewBox="0 0 96 150" accessibilityLabel="Location pin">
@@ -65,12 +64,13 @@ function locationsWithinRegion(locations, region) {
   const minLongitude = region.longitude - longitudePadding;
   const maxLongitude = region.longitude + longitudePadding;
 
-  return locations.filter((location) => (
-    location.latitude >= minLatitude &&
-    location.latitude <= maxLatitude &&
-    location.longitude >= minLongitude &&
-    location.longitude <= maxLongitude
-  ));
+  return locations.filter(
+    (location) =>
+      location.latitude >= minLatitude &&
+      location.latitude <= maxLatitude &&
+      location.longitude >= minLongitude &&
+      location.longitude <= maxLongitude
+  );
 }
 
 function clusterLocations(locations, region) {
@@ -87,7 +87,8 @@ function clusterLocations(locations, region) {
 
   const buckets = new Map();
   locations.forEach((location) => {
-    const key = Math.round(location.latitude * precision) + ':' + Math.round(location.longitude * precision);
+    const key =
+      Math.round(location.latitude * precision) + ':' + Math.round(location.longitude * precision);
     const existing = buckets.get(key) || { locations: [], latitude: 0, longitude: 0 };
     existing.locations.push(location);
     existing.latitude += location.latitude;
@@ -112,29 +113,41 @@ export default function MapTab({ navigation, route }) {
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(null);
   const [selectedCluster, setSelectedCluster] = useState(null);
-  const [region, setRegion] = useState(userCoords ? { ...userCoords, latitudeDelta: 1.2, longitudeDelta: 1.2 } : DEFAULT_REGION);
+  const [region, setRegion] = useState(
+    userCoords ? { ...userCoords, latitudeDelta: 1.2, longitudeDelta: 1.2 } : DEFAULT_REGION
+  );
 
   const visibleLocations = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return locations;
-    return locations.filter((location) =>
-      location.bathingWaterName.toLowerCase().includes(normalized) ||
-      location.name.toLowerCase().includes(normalized)
+    return locations.filter(
+      (location) =>
+        location.bathingWaterName.toLowerCase().includes(normalized) ||
+        location.name.toLowerCase().includes(normalized)
     );
   }, [locations, query]);
 
-  const viewportLocations = useMemo(() => locationsWithinRegion(visibleLocations, region), [visibleLocations, region]);
-  const clusters = useMemo(() => clusterLocations(viewportLocations, region), [viewportLocations, region]);
+  const viewportLocations = useMemo(
+    () => locationsWithinRegion(visibleLocations, region),
+    [visibleLocations, region]
+  );
+  const clusters = useMemo(
+    () => clusterLocations(viewportLocations, region),
+    [viewportLocations, region]
+  );
 
   const focusLocation = (location) => {
     setSelectedCluster(null);
     setSelected(location);
-    mapRef.current?.animateToRegion({
-      latitude: location.latitude,
-      longitude: location.longitude,
-      latitudeDelta: 0.08,
-      longitudeDelta: 0.08,
-    }, 350);
+    mapRef.current?.animateToRegion(
+      {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        latitudeDelta: 0.08,
+        longitudeDelta: 0.08,
+      },
+      350
+    );
   };
 
   const focusCluster = (cluster) => {
@@ -146,31 +159,46 @@ export default function MapTab({ navigation, route }) {
     setSelected(null);
     setSelectedCluster(cluster);
     const nextDelta = Math.max((region?.latitudeDelta ?? 1) / 3, 0.04);
-    mapRef.current?.animateToRegion({
-      latitude: cluster.latitude,
-      longitude: cluster.longitude,
-      latitudeDelta: nextDelta,
-      longitudeDelta: nextDelta,
-    }, 350);
+    mapRef.current?.animateToRegion(
+      {
+        latitude: cluster.latitude,
+        longitude: cluster.longitude,
+        latitudeDelta: nextDelta,
+        longitudeDelta: nextDelta,
+      },
+      350
+    );
   };
 
   const locateMe = () => {
     if (!userCoords) return;
-    mapRef.current?.animateToRegion({
-      ...userCoords,
-      latitudeDelta: 0.08,
-      longitudeDelta: 0.08,
-    }, 350);
+    mapRef.current?.animateToRegion(
+      {
+        ...userCoords,
+        latitudeDelta: 0.08,
+        longitudeDelta: 0.08,
+      },
+      350
+    );
   };
 
   const openDirections = () => {
     if (!selected) return;
-    const url = 'https://www.google.com/maps/dir/?api=1&destination=' + selected.latitude + ',' + selected.longitude;
+    const url =
+      'https://www.google.com/maps/dir/?api=1&destination=' +
+      selected.latitude +
+      ',' +
+      selected.longitude;
     Linking.openURL(url);
   };
 
   if (!locations.length) {
-    return <EmptyState title="No map locations" message="The official bathing water feed did not return any valid coordinates." />;
+    return (
+      <EmptyState
+        title="No map locations"
+        message="The official bathing water feed did not return any valid coordinates."
+      />
+    );
   }
 
   return (
@@ -208,7 +236,10 @@ export default function MapTab({ navigation, route }) {
       </View>
 
       <Pressable
-        style={[styles.locateButton, { bottom: (selected || selectedCluster) ? 210 + insets.bottom : 110 + insets.bottom }]}
+        style={[
+          styles.locateButton,
+          { bottom: selected || selectedCluster ? 210 + insets.bottom : 110 + insets.bottom },
+        ]}
         onPress={locateMe}
         accessibilityRole="button"
         accessibilityLabel="Locate me"
@@ -216,9 +247,8 @@ export default function MapTab({ navigation, route }) {
         <Ionicons name="locate" color={colors.blue} size={24} />
       </Pressable>
 
-
       {selectedCluster ? (
-        <View style={[styles.sheet, { bottom: insets.bottom + spacing.lg }]}> 
+        <View style={[styles.sheet, { bottom: insets.bottom + spacing.lg }]}>
           <View style={styles.sheetHandle} />
           <Text style={styles.sheetTitle}>{selectedCluster.count} locations here</Text>
           <Text style={styles.sheetSubtitle}>Zoom in further or choose one below.</Text>
@@ -244,10 +274,15 @@ export default function MapTab({ navigation, route }) {
           <View style={styles.sheetHandle} />
           <Text style={styles.sheetTitle}>{selected.bathingWaterName}</Text>
           <Text style={styles.sheetSubtitle}>{selected.name}</Text>
-          <Text style={styles.coordinates}>{selected.latitude.toFixed(4)}, {selected.longitude.toFixed(4)}</Text>
+          <Text style={styles.coordinates}>
+            {selected.latitude.toFixed(4)}, {selected.longitude.toFixed(4)}
+          </Text>
           <View style={styles.sheetActions}>
             <PrimaryButton label="Directions" onPress={openDirections} />
-            <SecondaryButton label="View details" onPress={() => navigation.navigate('Single Location', selected.location_id)} />
+            <SecondaryButton
+              label="View details"
+              onPress={() => navigation.navigate('Single Location', selected.location_id)}
+            />
           </View>
         </View>
       ) : null}

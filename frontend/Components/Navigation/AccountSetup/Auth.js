@@ -38,9 +38,9 @@ const AuthDetails = () => {
     <View>
       {user ? (
         <>
-        <TouchableOpacity style={styles.button} onPress={userSignOut}>
-        <Text style={styles.buttonText}>Sign Out</Text>
-      </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={userSignOut}>
+            <Text style={styles.buttonText}>Sign Out</Text>
+          </TouchableOpacity>
         </>
       ) : (
         <Text>Signed Out</Text>
@@ -51,25 +51,24 @@ const AuthDetails = () => {
 
 export default AuthDetails;
 
-
 const styles = StyleSheet.create({
   // container: {
-  //   marginTop: 1, 
+  //   marginTop: 1,
   //   alignItems: 'center',
-  //   width: '100%', 
+  //   width: '100%',
   // },
   button: {
-    backgroundColor: '#007bff', 
+    backgroundColor: '#007bff',
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
-    width: '80%', 
-    marginBottom:20
+    width: '80%',
+    marginBottom: 20,
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
-  }
+  },
 });

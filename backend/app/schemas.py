@@ -1,4 +1,3 @@
-from datetime import datetime
 from math import isfinite
 from typing import Any
 
@@ -32,7 +31,7 @@ class LocationCreate(BaseModel):
     @field_validator("coordinates", mode="before")
     @classmethod
     def validate_coordinates(cls, value):
-        if not isinstance(value, (list, tuple)) or len(value) != 2:
+        if not isinstance(value, list | tuple) or len(value) != 2:
             return value
 
         latitude, longitude = value

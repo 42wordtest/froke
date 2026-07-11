@@ -20,9 +20,9 @@ function tabIcon(routeName, focused) {
   return iconMap[routeName] || 'ellipse-outline';
 }
 
-export default function NavigationBar({route}) {
+export default function NavigationBar({ route }) {
   const user = useUser();
-  const {userLocation} = route.params;
+  const { userLocation } = route.params;
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -35,29 +35,34 @@ export default function NavigationBar({route}) {
     };
   }, [userLocation]);
 
-  const loadLocations = useCallback((forceRefresh = false) => {
-    setLoading(true);
-    setError(null);
-    getLocations({ forceRefresh })
-      .then(({locations: apiLocations}) => {
-        const withDistance = apiLocations.map((location) => {
-          if (!userCoords) return location;
-          return {
-            ...location,
-            distance: getDistance(userCoords, {
-              latitude: location.latitude,
-              longitude: location.longitude,
-            }),
-          };
-        });
-        setLocations(withDistance);
-      })
-      .catch((err) => {
-        console.log('Government location fetch failed', err);
-        setError('We could not load official bathing water locations. Check your connection and try again.');
-      })
-      .finally(() => setLoading(false));
-  }, [userCoords]);
+  const loadLocations = useCallback(
+    (forceRefresh = false) => {
+      setLoading(true);
+      setError(null);
+      getLocations({ forceRefresh })
+        .then(({ locations: apiLocations }) => {
+          const withDistance = apiLocations.map((location) => {
+            if (!userCoords) return location;
+            return {
+              ...location,
+              distance: getDistance(userCoords, {
+                latitude: location.latitude,
+                longitude: location.longitude,
+              }),
+            };
+          });
+          setLocations(withDistance);
+        })
+        .catch((err) => {
+          console.log('Government location fetch failed', err);
+          setError(
+            'We could not load official bathing water locations. Check your connection and try again.'
+          );
+        })
+        .finally(() => setLoading(false));
+    },
+    [userCoords]
+  );
 
   useEffect(() => {
     loadLocations(false);
@@ -65,7 +70,9 @@ export default function NavigationBar({route}) {
 
   const closestLocations = useMemo(() => {
     return [...locations]
-      .sort((a, b) => (a.distance ?? Number.MAX_SAFE_INTEGER) - (b.distance ?? Number.MAX_SAFE_INTEGER))
+      .sort(
+        (a, b) => (a.distance ?? Number.MAX_SAFE_INTEGER) - (b.distance ?? Number.MAX_SAFE_INTEGER)
+      )
       .slice(0, 30);
   }, [locations]);
 
@@ -105,14 +112,17 @@ export default function NavigationBar({route}) {
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        initialParams={{ locations, closestLocations, featuredLocations, reloadLocations: loadLocations, userCoords }}
+        initialParams={{
+          locations,
+          closestLocations,
+          featuredLocations,
+          reloadLocations: loadLocations,
+          userCoords,
+        }}
       />
       <Tab.Screen name="Map" component={Map} initialParams={{ locations, userCoords }} />
       <Tab.Screen name="Saved" component={Saved} />
-      <Tab.Screen
-        name="Account"
-        component={user ? MyAccount : MainComponent}
-      />
+      <Tab.Screen name="Account" component={user ? MyAccount : MainComponent} />
     </Tab.Navigator>
   );
 }
