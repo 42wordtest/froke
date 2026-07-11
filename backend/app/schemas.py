@@ -5,6 +5,12 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
+def _reject_blank_text(value: str) -> str:
+    if not value.strip():
+        raise ValueError("must not be blank")
+    return value
+
+
 class ApiError(BaseModel):
     message: str
 
@@ -18,6 +24,34 @@ class LocationCreate(BaseModel):
     username: str | None = None
     uid: str | None = None
 
+    @field_validator("location_name", "location_area", "body")
+    @classmethod
+    def reject_blank_text(cls, value: str):
+        return _reject_blank_text(value)
+
+    @field_validator("coordinates", mode="before")
+    @classmethod
+    def validate_coordinates(cls, value):
+        if not isinstance(value, (list, tuple)) or len(value) != 2:
+            return value
+
+        latitude, longitude = value
+        if isinstance(latitude, bool) or isinstance(longitude, bool):
+            raise ValueError("coordinates must be numeric")
+
+        try:
+            numeric_latitude = float(latitude)
+            numeric_longitude = float(longitude)
+        except (TypeError, ValueError):
+            raise ValueError("coordinates must be numeric") from None
+
+        if not isfinite(numeric_latitude) or numeric_latitude < -90 or numeric_latitude > 90:
+            raise ValueError("latitude must be between -90 and 90")
+        if not isfinite(numeric_longitude) or numeric_longitude < -180 or numeric_longitude > 180:
+            raise ValueError("longitude must be between -180 and 180")
+
+        return value
+
 
 class ReviewCreate(BaseModel):
     username: str
@@ -28,9 +62,7 @@ class ReviewCreate(BaseModel):
     @field_validator("username", "uid", "body")
     @classmethod
     def reject_blank_text(cls, value: str):
-        if not value.strip():
-            raise ValueError("must not be blank")
-        return value
+        return _reject_blank_text(value)
 
     @field_validator("rating_for_location", mode="before")
     @classmethod
