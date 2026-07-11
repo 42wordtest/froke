@@ -1,12 +1,11 @@
 from copy import deepcopy
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import SimpleNamespace
 
 import pytest
 import pytest_asyncio
-from httpx import ASGITransport, AsyncClient
-
 from app.main import app, db_dependency
+from httpx import ASGITransport, AsyncClient
 
 
 class AsyncCursor:
@@ -35,7 +34,7 @@ class AsyncCursor:
         try:
             return next(self._iter)
         except StopIteration:
-            raise StopAsyncIteration
+            raise StopAsyncIteration from None
 
 
 class FakeCollection:
@@ -43,7 +42,9 @@ class FakeCollection:
         self.documents = deepcopy(documents)
 
     def find(self, query):
-        return AsyncCursor([document for document in self.documents if self._matches(document, query)])
+        return AsyncCursor(
+            [document for document in self.documents if self._matches(document, query)]
+        )
 
     async def find_one(self, query, sort=None, projection=None):
         matches = [document for document in self.documents if self._matches(document, query)]
@@ -82,7 +83,9 @@ class FakeCollection:
         grouped = {}
         for document in self.documents:
             if document["location_id"] in match_ids:
-                grouped.setdefault(document["location_id"], []).append(document["rating_for_location"])
+                grouped.setdefault(document["location_id"], []).append(
+                    document["rating_for_location"]
+                )
         rows = [
             {"_id": location_id, "avg_rating": sum(ratings) / len(ratings)}
             for location_id, ratings in grouped.items()
@@ -108,7 +111,7 @@ class FakeDb:
                     "_id": "loc-1",
                     "location_id": 1,
                     "coordinates": [-1.2222, 50.1111],
-                    "created_at": datetime(2023, 1, 1, tzinfo=timezone.utc),
+                    "created_at": datetime(2023, 1, 1, tzinfo=UTC),
                     "distance_from_user_km": 2,
                     "location_name": "Brighton Beach",
                     "location_area": "Brighton",
@@ -121,7 +124,7 @@ class FakeDb:
                     "_id": "loc-2",
                     "location_id": 2,
                     "coordinates": [-3.1664, 51.4656],
-                    "created_at": datetime(2023, 1, 2, tzinfo=timezone.utc),
+                    "created_at": datetime(2023, 1, 2, tzinfo=UTC),
                     "distance_from_user_km": 10,
                     "location_name": "Barry Island",
                     "location_area": "Vale of Glamorgan",
@@ -142,7 +145,7 @@ class FakeDb:
                     "body": "Great.",
                     "rating_for_location": 5,
                     "votes_for_review": 0,
-                    "created_at": datetime(2023, 2, 1, tzinfo=timezone.utc),
+                    "created_at": datetime(2023, 2, 1, tzinfo=UTC),
                     "location_id": 1,
                 },
                 {
@@ -153,7 +156,7 @@ class FakeDb:
                     "body": "Nice.",
                     "rating_for_location": 3,
                     "votes_for_review": 1,
-                    "created_at": datetime(2023, 2, 2, tzinfo=timezone.utc),
+                    "created_at": datetime(2023, 2, 2, tzinfo=UTC),
                     "location_id": 1,
                 },
             ]

@@ -24,8 +24,12 @@ export default function LocationCard({ navigation, location, onOpenMap }) {
         <Ionicons name="water" size={24} color={colors.blue} />
       </View>
       <View style={styles.content}>
-        <Text style={styles.name} numberOfLines={2} maxFontSizeMultiplier={1.2}>{location.bathingWaterName}</Text>
-        <Text style={styles.point} numberOfLines={2} maxFontSizeMultiplier={1.2}>{location.name}</Text>
+        <Text style={styles.name} numberOfLines={2} maxFontSizeMultiplier={1.2}>
+          {location.bathingWaterName}
+        </Text>
+        <Text style={styles.point} numberOfLines={2} maxFontSizeMultiplier={1.2}>
+          {location.name}
+        </Text>
         <View style={styles.metaRow}>
           <Ionicons name="navigate-outline" size={15} color={colors.muted} />
           <Text style={styles.meta}>{formatDistance(location.distance)}</Text>

@@ -164,6 +164,30 @@ source .venv/bin/activate
 pytest
 ```
 
+## Quality Checks
+
+Run the backend checks:
+
+```bash
+cd backend
+source .venv/bin/activate
+pip install -r requirements-dev.txt
+black --check .
+ruff check .
+pytest
+```
+
+Run the frontend checks:
+
+```bash
+cd frontend
+npm ci
+npm run format:check
+npm run lint
+npm test -- --runInBand
+npx expo export --platform ios --output-dir /tmp/froke-export-check
+```
+
 ## API Routes
 
 - `GET /api`

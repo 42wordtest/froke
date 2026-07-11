@@ -1,3 +1,3 @@
-import ReviewContainer from "./ReviewContainer";
+import ReviewContainer from './ReviewContainer';
 
-export default ReviewContainer
+export default ReviewContainer;

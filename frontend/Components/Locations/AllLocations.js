@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -33,7 +32,10 @@ export default function AllLocations({ navigation }) {
     return locations
       .filter((location) => {
         if (!normalized) return true;
-        return location.bathingWaterName.toLowerCase().includes(normalized) || location.name.toLowerCase().includes(normalized);
+        return (
+          location.bathingWaterName.toLowerCase().includes(normalized) ||
+          location.name.toLowerCase().includes(normalized)
+        );
       })
       .sort((a, b) => a.bathingWaterName.localeCompare(b.bathingWaterName));
   }, [locations, query]);
@@ -44,26 +46,32 @@ export default function AllLocations({ navigation }) {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <FlatList
-      style={styles.screen}
-      contentContainerStyle={styles.list}
-      data={filteredLocations}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => <LocationCard navigation={navigation} location={item} />}
-      ListHeaderComponent={
-        <>
-          <AppHeader eyebrow="Directory" title="All bathing waters" subtitle="Official UK Government sampling points, sorted alphabetically." />
-          <View style={styles.searchWrap}>
-            <SearchBar value={query} onChangeText={setQuery} placeholder="Search all locations" />
-          </View>
-        </>
-      }
-      ListEmptyComponent={<EmptyState title="No locations found" message="Try changing your search term." />}
-      ItemSeparatorComponent={() => <View style={styles.separator} />}
-      initialNumToRender={14}
-      maxToRenderPerBatch={14}
-      windowSize={8}
-      removeClippedSubviews
-    />
+        style={styles.screen}
+        contentContainerStyle={styles.list}
+        data={filteredLocations}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <LocationCard navigation={navigation} location={item} />}
+        ListHeaderComponent={
+          <>
+            <AppHeader
+              eyebrow="Directory"
+              title="All bathing waters"
+              subtitle="Official UK Government sampling points, sorted alphabetically."
+            />
+            <View style={styles.searchWrap}>
+              <SearchBar value={query} onChangeText={setQuery} placeholder="Search all locations" />
+            </View>
+          </>
+        }
+        ListEmptyComponent={
+          <EmptyState title="No locations found" message="Try changing your search term." />
+        }
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        initialNumToRender={14}
+        maxToRenderPerBatch={14}
+        windowSize={8}
+        removeClippedSubviews
+      />
     </SafeAreaView>
   );
 }

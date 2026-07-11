@@ -8,7 +8,7 @@ import { createLocationTable, findID } from '../../localDatabase/database.js';
 import { ErrorState } from '../UI/States';
 import { colors } from '../../design/theme';
 
-export default function SingleLocation({route}) {
+export default function SingleLocation({ route }) {
   const location_id = route.params;
   const [location, setLocation] = useState(null);
   const [reviewCount, setReviewCount] = useState(0);
@@ -41,7 +41,7 @@ export default function SingleLocation({route}) {
   if (singleLoading) {
     return (
       <View style={styles.loading}>
-        <Loading style={{ width: 500, height: 1000 }}/>
+        <Loading style={{ width: 500, height: 1000 }} />
       </View>
     );
   }
@@ -53,9 +53,20 @@ export default function SingleLocation({route}) {
       style={styles.screen}
       ListHeaderComponent={() => (
         <View style={styles.content}>
-          <SingleLocationContainer location={location} reviewCount={reviewCount} averageRating={averageRating} saved={saved}/>
+          <SingleLocationContainer
+            location={location}
+            reviewCount={reviewCount}
+            averageRating={averageRating}
+            saved={saved}
+          />
           {location.source === 'gov-uk' ? null : (
-            <ReviewContainer location_id={location_id} reviewCount={reviewCount} setReviewCount={setReviewCount} averageRating={averageRating} setAverageRating={setAverageRating} />
+            <ReviewContainer
+              location_id={location_id}
+              reviewCount={reviewCount}
+              setReviewCount={setReviewCount}
+              averageRating={averageRating}
+              setAverageRating={setAverageRating}
+            />
           )}
         </View>
       )}

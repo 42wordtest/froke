@@ -1,11 +1,10 @@
 from contextlib import asynccontextmanager
 
 import httpx
-
 from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
-from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
 
 from .database import close_database_connection, get_database
@@ -32,7 +31,9 @@ GOVERNMENT_SAMPLING_POINTS_URL = "https://location.data.gov.uk/doc/ef/SamplingPo
 
 ENDPOINTS = {
     "GET /api": {"description": "serves up a json representation of all the available endpoints"},
-    "GET /api/government/sampling-points": {"description": "proxies the official UK Government bathing water sampling point feed"},
+    "GET /api/government/sampling-points": {
+        "description": "proxies the official UK Government bathing water sampling point feed"
+    },
     "GET /api/locations": {
         "description": "serves all safe swimming spots",
         "queries": ["sort_by", "distance", "order", "limit", "p"],
@@ -44,9 +45,7 @@ ENDPOINTS = {
         "description": "serves up reviews for a specific location",
         "queries": ["limit", "p"],
     },
-    "POST /api/locations/:location_id/reviews": {
-        "description": "posts a review for a location"
-    },
+    "POST /api/locations/:location_id/reviews": {"description": "posts a review for a location"},
     "PATCH /api/reviews/:review_id": {"description": "increments review votes"},
     "DELETE /api/reviews/:review_id": {"description": "deletes a review"},
     "POST /api/locations": {"description": "posts a new swimming location"},
@@ -101,11 +100,15 @@ async def get_government_sampling_points():
         "User-Agent": "Froke/1.0 (+https://expo.dev; mobile-app)",
     }
     try:
-        async with httpx.AsyncClient(timeout=20.0, follow_redirects=True, headers=headers) as client:
+        async with httpx.AsyncClient(
+            timeout=20.0, follow_redirects=True, headers=headers
+        ) as client:
             response = await client.get(GOVERNMENT_SAMPLING_POINTS_URL)
             response.raise_for_status()
     except httpx.HTTPStatusError as exc:
-        raise HTTPException(status_code=exc.response.status_code, detail="Government API unavailable") from exc
+        raise HTTPException(
+            status_code=exc.response.status_code, detail="Government API unavailable"
+        ) from exc
     except httpx.HTTPError as exc:
         raise HTTPException(status_code=502, detail="Government API unavailable") from exc
 

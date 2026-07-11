@@ -5,8 +5,14 @@ export default function AppHeader({ eyebrow, title, subtitle }) {
   return (
     <View style={styles.container} accessibilityRole="header">
       {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-      <Text style={styles.title} maxFontSizeMultiplier={1.25}>{title}</Text>
-      {subtitle ? <Text style={styles.subtitle} maxFontSizeMultiplier={1.2}>{subtitle}</Text> : null}
+      <Text style={styles.title} maxFontSizeMultiplier={1.25}>
+        {title}
+      </Text>
+      {subtitle ? (
+        <Text style={styles.subtitle} maxFontSizeMultiplier={1.2}>
+          {subtitle}
+        </Text>
+      ) : null}
     </View>
   );
 }

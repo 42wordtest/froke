@@ -1,3 +1,3 @@
-import AddLocationMap from "./AddLocationMap";
+import AddLocationMap from './AddLocationMap';
 
-export default AddLocationMap
+export default AddLocationMap;

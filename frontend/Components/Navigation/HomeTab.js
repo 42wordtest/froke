@@ -45,7 +45,10 @@ export default function HomeTab({ navigation, route }) {
           if (!userCoords) return location;
           return {
             ...location,
-            distance: getDistance(userCoords, { latitude: location.latitude, longitude: location.longitude }),
+            distance: getDistance(userCoords, {
+              latitude: location.latitude,
+              longitude: location.longitude,
+            }),
           };
         });
         setLocations(withDistance);
@@ -72,7 +75,9 @@ export default function HomeTab({ navigation, route }) {
               accessibilityState={{ selected: filter === item }}
               style={[styles.filter, filter === item && styles.filterActive]}
             >
-              <Text style={[styles.filterText, filter === item && styles.filterTextActive]}>{item}</Text>
+              <Text style={[styles.filterText, filter === item && styles.filterTextActive]}>
+                {item}
+              </Text>
             </Pressable>
           ))}
         </View>
@@ -86,20 +91,27 @@ export default function HomeTab({ navigation, route }) {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <FlatList
-      style={styles.screen}
-      contentContainerStyle={styles.list}
-      data={filteredLocations}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => <LocationCard navigation={navigation} location={item} />}
-      ListHeaderComponent={header}
-      ListEmptyComponent={<EmptyState title="No bathing waters found" message="Try another search term or refresh the official feed." />}
-      ItemSeparatorComponent={() => <View style={styles.separator} />}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.blue} />}
-      initialNumToRender={12}
-      maxToRenderPerBatch={12}
-      windowSize={7}
-      removeClippedSubviews
-    />
+        style={styles.screen}
+        contentContainerStyle={styles.list}
+        data={filteredLocations}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <LocationCard navigation={navigation} location={item} />}
+        ListHeaderComponent={header}
+        ListEmptyComponent={
+          <EmptyState
+            title="No bathing waters found"
+            message="Try another search term or refresh the official feed."
+          />
+        }
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.blue} />
+        }
+        initialNumToRender={12}
+        maxToRenderPerBatch={12}
+        windowSize={7}
+        removeClippedSubviews
+      />
     </SafeAreaView>
   );
 }
