@@ -223,6 +223,33 @@ async def test_reviews_can_be_created_voted_and_deleted(client):
 
 
 @pytest.mark.asyncio
+async def test_post_review_for_missing_location_returns_404():
+    fake_db = FakeDb()
+    starting_review_count = await fake_db.reviews.count_documents({})
+    app.dependency_overrides[db_dependency] = lambda: fake_db
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://testserver",
+        ) as client:
+            response = await client.post(
+                "/api/locations/999/reviews",
+                json={
+                    "username": "newuser",
+                    "uid": "uid-3",
+                    "body": "Loved it.",
+                    "rating_for_location": 5,
+                },
+            )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 404
+    assert response.json() == {"message": "Location Does Not Exist!"}
+    assert await fake_db.reviews.count_documents({}) == starting_review_count
+
+
+@pytest.mark.asyncio
 async def test_missing_location_reviews_returns_404(client):
     response = await client.get("/api/locations/999/reviews")
 
