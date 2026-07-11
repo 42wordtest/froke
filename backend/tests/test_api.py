@@ -226,6 +226,24 @@ async def test_reviews_can_be_created_voted_and_deleted(client):
 @pytest.mark.parametrize(
     "payload",
     [
+        {"inc_votes": 0},
+        {"inc_votes": 2},
+        {"inc_votes": 0.5},
+        {"inc_votes": True},
+        {"inc_votes": "up"},
+    ],
+)
+async def test_patch_review_rejects_invalid_vote_increments(client, payload):
+    response = await client.patch("/api/reviews/1", json=payload)
+
+    assert response.status_code == 400
+    assert response.json() == {"message": "Bad Request"}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "payload",
+    [
         {
             "username": "newuser",
             "uid": "uid-3",
