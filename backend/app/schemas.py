@@ -49,12 +49,18 @@ class ReviewCreate(BaseModel):
 class VotePatch(BaseModel):
     inc_votes: int | float
 
-    @field_validator("inc_votes")
+    @field_validator("inc_votes", mode="before")
     @classmethod
-    def reject_bool(cls, value: int | float):
+    def validate_vote_increment(cls, value):
         if isinstance(value, bool):
             raise ValueError("inc_votes must be numeric")
-        return value
+        try:
+            numeric_value = float(value)
+        except (TypeError, ValueError):
+            raise ValueError("inc_votes must be numeric") from None
+        if numeric_value not in (-1, 1):
+            raise ValueError("inc_votes must be -1 or 1")
+        return int(numeric_value)
 
 
 class LocationOut(BaseModel):
