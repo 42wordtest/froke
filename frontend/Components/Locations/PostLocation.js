@@ -15,23 +15,35 @@ export default function PostLocation ({route}) {
     const [isErr, setIsErr] = useState(false)
     const [submitting, setSubmitting] = useState(false);
 
-    const selectImage = async function (){
-        const tempImage = await ImagePicker.launchImageLibraryAsync({
-        quality: 1,
-      })
-      
-      setImageURI(tempImage.assets[0].uri)
-    }
-
-    async function requestClientPerms() {
-      if (Platform.OS !== "web") {
+    async function ensureMediaLibraryPermission() {
+      if (Platform.OS !== 'web') {
         const {status} = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== "granted") {
-          alert("Sorry, we need camera roll permissions to upload swimspots");
+        if (status !== 'granted') {
+          alert('Sorry, we need camera roll permissions to upload swimspots');
+          return false;
         }
       }
+      return true;
     }
-    requestClientPerms()
+
+    const selectImage = async function (){
+      try {
+        const hasPermission = await ensureMediaLibraryPermission();
+        if (!hasPermission) return;
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+          quality: 1,
+        });
+
+        if (result.canceled || !result.assets?.length) return;
+        setImageURI(result.assets[0].uri);
+        setIsErr(false);
+        setLocationSubmitted(false);
+      } catch (error) {
+        setIsErr(true);
+        console.log('Error selecting image:', error);
+      }
+    }
 
     const handleLocationNameChange = (input) => {
         setLocationName(input);
@@ -46,11 +58,14 @@ export default function PostLocation ({route}) {
       }
 
     const submitLocation = function (){
+        if (submitting) return
         if(!imageURI || !locationName || !area || !locationDescription){
           alert('Please fill in all information')
           return
         }
         setSubmitting(true)
+        setIsErr(false)
+        setLocationSubmitted(false)
         uploadImage(imageURI)
         .then((url)=>{
           const coordinates = [draggableLocation.latitude, draggableLocation.longitude]
@@ -61,22 +76,23 @@ export default function PostLocation ({route}) {
             body: locationDescription,
             location_img_url: url
           }
-          postLocation(newLocation)
-          .then((res) => {
+          return postLocation(newLocation)
+        })
+        .then(() => {
             setLocationSubmitted(true)
             setIsErr(false)
 
             setLocationName('');
             setArea('');
             setLocationDescription('');
-            setSubmitting(false)
-          })
+            setImageURI();
+        })
         .catch((error) => {
           setIsErr(true)
-          setSubmitting(false)
-          console.log('Error uploading image:', error);
-        });
-    })
+          setLocationSubmitted(false)
+          console.log('Error submitting location:', error);
+        })
+        .finally(() => setSubmitting(false))
     }
 
     return (
@@ -111,7 +127,7 @@ export default function PostLocation ({route}) {
         <TouchableOpacity style={styles.uploadButton} onPress={selectImage}>
           <Text style={styles.uploadButtonText}>UPLOAD IMAGE</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.submitButton} onPress={submitLocation}>
+        <TouchableOpacity style={styles.submitButton} onPress={submitLocation} disabled={submitting}>
           <Text style={styles.submitButtonText}>{submitting ? 'SUBMITTING' : 'SUBMIT'}</Text>
         </TouchableOpacity>
         {locationSubmitted && <Text style={styles.locationSubmitted}>Location submitted!</Text>}
