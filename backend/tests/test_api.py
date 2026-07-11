@@ -201,6 +201,61 @@ async def test_post_location_flips_coordinates(client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {
+            "coordinates": [50.1111, -1.2222],
+            "location_name": "   ",
+            "location_area": "Brighton",
+            "body": "A new swim spot.",
+        },
+        {
+            "coordinates": [50.1111, -1.2222],
+            "location_name": "New Spot",
+            "location_area": "",
+            "body": "A new swim spot.",
+        },
+        {
+            "coordinates": [50.1111, -1.2222],
+            "location_name": "New Spot",
+            "location_area": "Brighton",
+            "body": "   ",
+        },
+        {
+            "coordinates": [91, -1.2222],
+            "location_name": "New Spot",
+            "location_area": "Brighton",
+            "body": "A new swim spot.",
+        },
+        {
+            "coordinates": [50.1111, -181],
+            "location_name": "New Spot",
+            "location_area": "Brighton",
+            "body": "A new swim spot.",
+        },
+        {
+            "coordinates": [True, -1.2222],
+            "location_name": "New Spot",
+            "location_area": "Brighton",
+            "body": "A new swim spot.",
+        },
+        {
+            "coordinates": ["north", -1.2222],
+            "location_name": "New Spot",
+            "location_area": "Brighton",
+            "body": "A new swim spot.",
+        },
+    ],
+)
+async def test_post_location_rejects_invalid_payloads(client, payload):
+    response = await client.post("/api/locations", json=payload)
+
+    assert response.status_code == 400
+    assert response.json() == {"message": "Bad Request"}
+
+
+@pytest.mark.asyncio
 async def test_reviews_can_be_created_voted_and_deleted(client):
     create_response = await client.post(
         "/api/locations/1/reviews",
