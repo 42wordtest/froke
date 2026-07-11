@@ -1,14 +1,10 @@
 # froke
 
-`froke` is one app split into two independent projects in one fresh repo:
-
 ```text
 my-app/
   frontend/  Expo React Native app with a custom development client
   backend/   FastAPI API backed by MongoDB
 ```
-
-There is no Nx, Turborepo, or workspace setup. Run each side from its own folder.
 
 ## What To Install
 
