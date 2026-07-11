@@ -1,4 +1,5 @@
 from datetime import datetime
+from math import isfinite
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -23,6 +24,26 @@ class ReviewCreate(BaseModel):
     uid: str
     body: str
     rating_for_location: int | float
+
+    @field_validator("username", "uid", "body")
+    @classmethod
+    def reject_blank_text(cls, value: str):
+        if not value.strip():
+            raise ValueError("must not be blank")
+        return value
+
+    @field_validator("rating_for_location", mode="before")
+    @classmethod
+    def validate_rating(cls, value):
+        if isinstance(value, bool):
+            raise ValueError("rating_for_location must be numeric")
+        try:
+            numeric_value = float(value)
+        except (TypeError, ValueError):
+            raise ValueError("rating_for_location must be numeric") from None
+        if not isfinite(numeric_value) or numeric_value < 1 or numeric_value > 5:
+            raise ValueError("rating_for_location must be between 1 and 5")
+        return value
 
 
 class VotePatch(BaseModel):
